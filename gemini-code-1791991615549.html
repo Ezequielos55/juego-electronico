@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Taller Electrónico - Prototipo UX</title>
+  <style>
+    :root {
+      --bg-dark: #121824;
+      --panel-bg: #1e293b;
+      --accent-blue: #38bdf8;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-yellow: #eab308;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* HEADER / BARRA SUPERIOR */
+    header {
+      background-color: #0f172a;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #334155;
+    }
+
+    .title-box h1 {
+      font-size: 1.2rem;
+      color: var(--accent-blue);
+    }
+
+    .title-box p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 15px;
+    }
+
+    .status-badge {
+      background: #334155;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    /* LAYOUT PRINCIPAL */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ÁREA DE TRABAJO (PCB) */
+    .workspace {
+      position: relative;
+      background: #090d16;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .pcb-board {
+      width: 520px;
+      height: 340px;
+      background-color: #064e3b; /* Verde PCB */
+      border: 4px solid #042f2e;
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    /* Pistas del circuito (decorativas) */
+    .trace {
+      position: absolute;
+      background-color: #10b981;
+      opacity: 0.4;
+    }
+    .trace-1 { top: 70px; left: 50px; width: 400px; height: 6px; }
+    .trace-2 { top: 70px; left: 240px; width: 6px; height: 180px; }
+
+    /* COMPONENTES INTERACTIVOS */
+    .component {
+      position: absolute;
+      border: 2px dashed transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .component:hover {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Componente: Jack de Alimentación */
+    #power-jack {
+      top: 40px; left: 30px; width: 60px; height: 60px;
+      background: #334155; color: #fff; border-radius: 4px;
+    }
+
+    /* Componente: Fusible F1 */
+    #fuse-f1 {
+      top: 55px; left: 130px; width: 70px; height: 30px;
+      background: #e2e8f0; color: #0f172a; border-radius: 15px;
+      border: 2px solid #94a3b8;
+    }
+
+    /* Componente: Condensador C12 */
+    #cap-c12 {
+      top: 180px; left: 215px; width: 56px; height: 56px;
+      background: #1e3a8a; color: #fff; border-radius: 50%;
+      border: 3px solid #3b82f6;
+    }
+
+    /* Estado de avería visual */
+    .damaged {
+      border-color: var(--accent-red) !important;
+      background: #7f1d1d !important;
+    }
+
+    /* Componente: Regulador U1 */
+    #reg-u1 {
+      top: 50px; left: 360px; width: 80px; height: 40px;
+      background: #1e293b; color: #fff; border: 1px solid #475569;
+    }
+
+    /* LED Indicador */
+    #led-status {
+      top: 250px; left: 420px; width: 24px; height: 24px;
+      border-radius: 50%; background: #475569;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .led-on {
+      background: var(--accent-green) !important;
+      box-shadow: 0 0 15px var(--accent-green) !important;
+    }
+
+    /* PANEL LATERAL DE INSTRUMENTOS */
+    .sidebar {
+      background-color: var(--panel-bg);
+      border-left: 2px solid #334155;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+    }
+
+    .panel-box {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+
+    .panel-box h2 {
+      font-size: 0.9rem;
+      color: var(--accent-blue);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* FUENTE REGULABLE (SLIDER) */
+    .psu-control {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .psu-display {
+      background-color: #0f172a;
+      color: var(--accent-blue);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1.3rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #334155;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    /* MULTÍMETRO DIGITAL */
+    .dmm-display {
+      background-color: #859f7a; /* Pantalla LCD retro */
+      color: #0f172a;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1.6rem;
+      font-weight: bold;
+      text-align: right;
+      padding: 8px;
+      border-radius: 4px;
+      border: 2px solid #475569;
+      margin-bottom: 10px;
+    }
+
+    .selector-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn {
+      background: #334155;
+      color: var(--text-main);
+      border: none;
+      padding: 8px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.75rem;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: #475569; }
+    .btn.active { background: var(--accent-blue); color: #0f172a; }
+
+    /* CONSOLA DE MENSAJES Y PISTAS */
+    .log-box {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      height: 100px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      margin-bottom: 5px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 3px;
+    }
+    .log-entry.success { color: var(--accent-green); }
+    .log-entry.error { color: var(--accent-red); }
+    .log-entry.info { color: var(--accent-yellow); }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR DE ESTADO -->
+  <header>
+    <div class="title-box">
+      <h1>PCB Repair Simulator — Prototipo Taller</h1>
+      <p>Caso #01: Fuente auxiliar sin señal de encendido</p>
+    </div>
+    <div class="status-bar">
+      <div class="status-badge">Herramienta: <strong id="current-tool">Multímetro</strong></div>
+      <div class="status-badge">Tensión de Entrada: <strong id="power-status">0.0 V</strong></div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main>
+    <!-- MESA DE TRABAJO (PCB) -->
+    <section class="workspace">
+      <div class="pcb-board">
+        <div class="trace trace-1"></div>
+        <div class="trace trace-2"></div>
+
+        <!-- Componentes -->
+        <div id="power-jack" class="component" onclick="inspectComponent('PWR_JACK')">
+          24V IN
+        </div>
+
+        <div id="fuse-f1" class="component damaged" onclick="inspectComponent('F1')">
+          F1 (2A)
+        </div>
+
+        <div id="cap-c12" class="component damaged" onclick="inspectComponent('C12')">
+          C12
+        </div>
+
+        <div id="reg-u1" class="component" onclick="inspectComponent('U1')">
+          U1 (5V Reg)
+        </div>
+
+        <div id="led-status" class="component" title="LED Indicador 5V"></div>
+      </div>
+    </section>
+
+    <!-- PANEL LATERAL (INSTRUMENTOS Y ACCIONES) -->
+    <aside class="sidebar">
+      
+      <!-- FUENTE DE ALIMENTACIÓN REGULABLE (SLIDER) -->
+    <div class="panel-box">
+      <h2>Fuente Regulable (CC)</h2>
+      <div class="psu-control">
+        <div id="psu-screen" class="psu-display">0.0 V</div>
+        <input type="range" id="voltage-slider" min="0" max="30" step="0.5" value="0" oninput="updateVoltage(this.value)">
+      </div>
+    </div>
+
+      <!-- MULTÍMETRO DIGITAL -->
+      <div class="panel-box">
+        <h2>Multímetro Digital</h2>
+        <div id="dmm-val" class="dmm-display">O.L</div>
+        <div class="selector-group">
+          <button id="mode-cont" class="btn active" onclick="setDMMMode('CONT')">Continuidad</button>
+          <button id="mode-res" class="btn" onclick="setDMMMode('RES')">Resistencia (Ω)</button>
+          <button id="mode-volt" class="btn" onclick="setDMMMode('VOLT')">Voltaje (V)</button>
+        </div>
+      </div>
+
+      <!-- ACCIONES DE REPARACIÓN -->
+      <div class="panel-box">
+        <h2>Acciones de Taller</h2>
+        <button class="btn" style="width: 100%; margin-bottom: 6px;" onclick="replaceComponent('F1')">Sustituir Fusible F1</button>
+        <button class="btn" style="width: 100%;" onclick="replaceComponent('C12')">Sustituir Condensador C12</button>
+      </div>
+
+      <!-- REGISTRO DE EVENTOS (LOG) -->
+      <div class="panel-box" style="flex: 1;">
+        <h2>Registro & Diagnóstico</h2>
+        <div id="log" class="log-box">
+          <div class="log-entry info">Sistema listo. Usa el slider para regular el voltaje de entrada.</div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- LÓGICA DEL PROTOTIPO -->
+  <script>
+    // ESTADO DEL CIRCUITO
+    let currentVoltage = 0.0;
+    let dmmMode = 'CONT'; // CONT, RES, VOLT
+    
+    let state = {
+      f1_ok: false,     // Inicialmente abierto/fundido
+      c12_ok: false,    // Inicialmente en cortocircuito
+      u1_ok: true
+    };
+
+    // ELEMENTOS DOM
+    const dmmDisplay = document.getElementById('dmm-val');
+    const logBox = document.getElementById('log');
+    const powerStatus = document.getElementById('power-status');
+    const psuScreen = document.getElementById('psu-screen');
+    const voltageSlider = document.getElementById('voltage-slider');
+    const ledStatus = document.getElementById('led-status');
+
+    // CONTROL DE LA FUENTE MEDIANTE SLIDER
+    function updateVoltage(val) {
+      currentVoltage = parseFloat(val);
+      psuScreen.innerText = currentVoltage.toFixed(1) + ' V';
+      powerStatus.innerText = currentVoltage.toFixed(1) + ' V';
+
+      // Si subes el voltaje por encima de 5V y hay un cortocircuito con el fusible bueno, salta el fusible
+      if (currentVoltage > 5.0 && state.f1_ok && !state.c12_ok) {
+        state.f1_ok = false;
+        document.getElementById('fuse-f1').classList.add('damaged');
+        addLog(`¡CHISPA! Con ${currentVoltage.toFixed(1)}V aplicados, el cortocircuito en C12 ha fundido el fusible F1.`, 'error');
+      }
+
+      checkCircuitStatus();
+    }
+
+    // MODO DEL MULTÍMETRO
+    function setDMMMode(mode) {
+      dmmMode = mode;
+      document.querySelectorAll('.selector-group .btn').forEach(b => b.classList.remove('active'));
+      if(mode === 'CONT') document.getElementById('mode-cont').classList.add('active');
+      if(mode === 'RES') document.getElementById('mode-res').classList.add('active');
+      if(mode === 'VOLT') document.getElementById('mode-volt').classList.add('active');
+      
+      dmmDisplay.innerText = mode === 'VOLT' ? '0.00 V' : (mode === 'RES' ? 'O.L' : 'O.L');
+      addLog(`Modo multímetro cambiado a: ${mode}`, 'info');
+    }
+
+    // INTERACCIÓN CON COMPONENTES
+    function inspectComponent(comp) {
+      if (comp === 'F1') {
+        if (dmmMode === 'CONT') {
+          if (state.f1_ok) {
+            dmmDisplay.innerText = '0.0 Ω';
+            addLog('F1: Continuidad CORRECTA (0.0 Ω).', 'success');
+          } else {
+            dmmDisplay.innerText = 'O.L';
+            addLog('F1: Sin continuidad (Línea abierta / Fusible fundido).', 'error');
+          }
+        } else if (dmmMode === 'RES') {
+          dmmDisplay.innerText = state.f1_ok ? '0.2 Ω' : 'O.L';
+        } else if (dmmMode === 'VOLT') {
+          let val = currentVoltage > 0 ? currentVoltage.toFixed(1) + ' V' : '0.00 V';
+          dmmDisplay.innerText = val;
+          addLog(`Voltaje en entrada F1: ${val}`, 'info');
+        }
+      }
+
+      if (comp === 'C12') {
+        if (dmmMode === 'CONT' || dmmMode === 'RES') {
+          if (state.c12_ok) {
+            dmmDisplay.innerText = 'MΩ (Cargando)';
+            addLog('C12: Impedancia normal en el condensador.', 'success');
+          } else {
+            dmmDisplay.innerText = '0.2 Ω';
+            addLog('C12: ¡CORTOCIRCUITO DETECTADO! (0.2 Ω entre terminales).', 'error');
+          }
+        } else if (dmmMode === 'VOLT') {
+          let val = (currentVoltage > 0 && state.f1_ok && state.c12_ok) ? currentVoltage.toFixed(1) + ' V' : '0.00 V';
+          dmmDisplay.innerText = val;
+          addLog(`Voltaje en C12: ${val}`, 'info');
+        }
+      }
+
+      if (comp === 'U1') {
+        if (dmmMode === 'VOLT') {
+          let val = (currentVoltage >= 12 && state.f1_ok && state.c12_ok) ? '5.00 V' : '0.00 V';
+          dmmDisplay.innerText = val;
+          addLog(`Salida Regulador U1: ${val}`, val === '5.00 V' ? 'success' : 'error');
+        } else {
+          dmmDisplay.innerText = 'N/A';
+        }
+      }
+
+      if (comp === 'PWR_JACK') {
+        dmmDisplay.innerText = dmmMode === 'VOLT' ? currentVoltage.toFixed(1) + ' V' : '0.00 V';
+        addLog(`Entrada de alimentación principal: ${dmmDisplay.innerText}`, 'info');
+      }
+    }
+
+    // REPARACIÓN / REEMPLAZO DE COMPONENTES
+    function replaceComponent(comp) {
+      if (comp === 'F1') {
+        state.f1_ok = true;
+        document.getElementById('fuse-f1').classList.remove('damaged');
+        addLog('Se ha instalado un fusible nuevo F1 (2A).', 'success');
+      }
+      if (comp === 'C12') {
+        state.c12_ok = true;
+        document.getElementById('cap-c12').classList.remove('damaged');
+        addLog('Se ha desoldado C12 y reemplazado por un condensador nuevo de 1000µF / 35V.', 'success');
+      }
+      checkCircuitStatus();
+    }
+
+    // COMPROBAR ESTADO GENERAL Y RESULTADO FINAL
+    function checkCircuitStatus() {
+      if (currentVoltage >= 12 && state.f1_ok && state.c12_ok && state.u1_ok) {
+        ledStatus.classList.add('led-on');
+        addLog('¡ÉXITO! La línea de 5V está activa y el LED se ha encendido. Reparación completada.', 'success');
+      } else {
+        ledStatus.classList.remove('led-on');
+      }
+    }
+
+    // REGISTRO DE MENSAJES (LOGGER)
+    function addLog(msg, type) {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.innerText = `> ${msg}`;
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
